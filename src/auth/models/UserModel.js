@@ -1,15 +1,11 @@
 //!dmbg
 const mongoose = require('mongoose'); // Erase if already required
 
-const DOCUMENT_NAME = 'User';
-const COLLECTION_NAME = 'Users';
-
 // Declare the Schema of the Mongo model
 var userSchema = new mongoose.Schema({
     name:{
         type:String,
         required:true,
-        unique:true,
         index:true,
     },
     email:{
@@ -32,8 +28,9 @@ var userSchema = new mongoose.Schema({
     }
 }, {
     timestamps: true,
-    collation: COLLECTION_NAME,
+    // collation: 'Users',
+    collection: 'Users'
 });
 
 //Export the model
-module.exports = mongoose.model(DOCUMENT_NAME, userSchema);
+module.exports = mongoose.model('User', userSchema);

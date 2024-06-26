@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 const checkConnect = require('../../helpers/check.connect');
-const database = require("config").get(`${process.env.NODE_ENV}.database`);
+const mongodb = require("config").get(`${process.env.NODE_ENV}.database.mongodb`);
 
-const connectionString = `mongodb+srv://${database.user}:${database.password}@${database.host}/?retryWrites=true&w=majority&appName=${database.name}`;
+const connectionString = `mongodb+srv://${mongodb.user}:${mongodb.password}@${mongodb.host}/?retryWrites=true&w=majority&appName=${mongodb.name}`;
 
 
 class MongoDB {

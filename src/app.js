@@ -24,7 +24,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 
 // init db
-require('./config/database/init.mongodb');
+require('./config/database/MongoDB');
 
 // init routes
 app.use('/v1/api', authenticationRouter);

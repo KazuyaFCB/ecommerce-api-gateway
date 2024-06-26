@@ -1,20 +1,33 @@
+const AuthService = require('../services/AuthService');
+
 class AuthController {
-    signUp = async function(req, res, next) {
-        const { email, password } = req.body;
-        const user = new User({
-            email,
-            password
-        });
+    async register(req, res, next) {
         try {
-            const result = await user.save();
-            res.status(200).json({
-                message: 'User created successfully',
-                result
-            });
+            const { name, email, password } = req.body;
+            const result = await AuthService.register({ name, email, password });
+
+            if (result.status === 'success') {
+                return res.status(201).json(result);
+            } else {
+                return res.status(result.code).json(result);
+            }
         } catch (error) {
-            res.status(400).json({
-                message: error.message
-            });
+            next(error);
+        }
+    }
+
+    async login(req, res, next) {
+        try {
+            const { email, password } = req.body;
+            const result = await AuthService.login({ email, password });
+
+            if (result.status === 'success') {
+                return res.status(200).json(result);
+            } else {
+                return res.status(result.code).json(result);
+            }
+        } catch (error) {
+            next(error);
         }
     }
 }

@@ -6,11 +6,13 @@
       "port": 8080
     },
     "database": {
-      "host": "ecommerce.yssxvcx.mongodb.net",
-      "port": 27017,
-      "name": "ecommerce",
-      "user": "hoangvinh175",
-      "password": "JVuWrb6s3RHzIljE"
+      "mongodb": {
+        "host": "ecommerce.yssxvcx.mongodb.net",
+        "port": 27017,
+        "name": "ecommerce",
+        "user": "hoangvinh175",
+        "password": "JVuWrb6s3RHzIljE"
+      }
     }
   }
 }
