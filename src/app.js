@@ -6,8 +6,11 @@ const logger = require('morgan');
 const helmet = require('helmet');
 const compression = require('compression');
 require('dotenv').config();
+const { createProxyMiddleware } = require('http-proxy-middleware');
 
 const authenticationRouter = require('./auth/routes/AuthRoutes');
+const { verifyTokenWithHS256, verifyTokenWithRS256 } = require('./auth/middlewares/VerifyToken');
+const Role = require('./auth/utils/Role');
 
 var app = express();
 
@@ -35,6 +38,48 @@ require('./config/database/MongoDB');
 
 // init routes
 app.use('/v1/api/auth', authenticationRouter);
+// app.use('/api/shop', verifyTokenWithHS256([Role.SHOP]), createProxyMiddleware({
+//   target: 'http://api.restful-api.dev',
+//   changeOrigin: true,
+//   pathRewrite: { '^/api/shop': '/objects' }
+// }));
+app.use('/api/private',createProxyMiddleware({
+  target: 'https://api.restful-api.dev',
+  changeOrigin: true,
+  pathRewrite: {
+    '^/api/private': '/objects',
+  },
+  logLevel: 'debug',
+  onError(err, req, res) {
+    console.error('Proxy Error:', err);
+    res.status(500).send('Proxy Error');
+  },
+}));
+
+const rewriteFn = function (path, req) {
+  return path.replace('/api/private', '/objects');
+};
+
+// app.use(createProxyMiddleware({
+//   target: 'https://api.restful-api.dev',
+//   changeOrigin: true,
+//   pathRewrite: {
+//     [`^/api/private`]: '/objects',
+//   },
+// }));
+
+// app.use('/api/private', verifyTokenWithHS256([Role.SHOP, Role.USER]), createProxyMiddleware({
+//   target: 'https://api.restful-api.dev/objects',
+//   changeOrigin: true,
+//   //pathRewrite: { '^/api/private': '/objects' },
+//   // onProxyReq(proxyReq, req, res) {
+//   //   console.log('Proxying request to: ', proxyReq.href);
+//   // },
+//   // onError(err, req, res) {
+//   //   console.error('Proxy error: ', err);
+//   //   res.status(500).send('Proxy error');
+//   // }
+// }));
 
 // error handler
 
