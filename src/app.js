@@ -7,7 +7,7 @@ const helmet = require('helmet');
 const compression = require('compression');
 require('dotenv').config();
 
-var authenticationRouter = require('./auth/routes/AuthRoutes');
+const authenticationRouter = require('./auth/routes/AuthRoutes');
 
 var app = express();
 
@@ -21,17 +21,22 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+const cors = require('cors');
+
+app.use(cors({
+  origin: '*',
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  credentials: true,
+}));
 
 
 // init db
 require('./config/database/MongoDB');
 
 // init routes
-app.use('/v1/api', authenticationRouter);
+app.use('/v1/api/auth', authenticationRouter);
 
 // error handler
-
-
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

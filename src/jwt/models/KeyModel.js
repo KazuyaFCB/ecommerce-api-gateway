@@ -7,13 +7,13 @@ const keySchema = new mongoose.Schema({
         required: true, 
         unique: true
     },
-    publicKey: { 
-        type: String, 
-        required: true 
-    },
     privateKey: { 
         type: String, 
         required: true 
+    },
+    publicKey: { 
+        type: String, 
+        // only need for RS256, no need for HS256
     }
 }, { 
     timestamps: true, 

@@ -4,7 +4,7 @@ class AuthController {
     async register(req, res, next) {
         try {
             const { name, email, password } = req.body;
-            const result = await AuthService.register({ name, email, password });
+            const result = await AuthService.registerWithHS256({ name, email, password });
 
             if (result.status === 'success') {
                 return res.status(201).json(result);
@@ -19,7 +19,7 @@ class AuthController {
     async login(req, res, next) {
         try {
             const { email, password } = req.body;
-            const result = await AuthService.login({ email, password });
+            const result = await AuthService.loginWithHS256({ email, password });
 
             if (result.status === 'success') {
                 return res.status(200).json(result);
