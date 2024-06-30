@@ -5,11 +5,14 @@ const KeyRepository = require('../../jwt/repositories/KeyRepository');
 
 function verifyTokenWithHS256(requiredRoles) {
     return async (req, res, next) => {
-        const token = req.headers['authorization'].split(" ")[1]; // remove "Bearer"
+        if (!requiredRoles || requiredRoles.length === 0) return next();
+
+        let token = req.headers['authorization']; 
         
         if (!token) {
             return res.status(401).send({ message: 'No token provided.' });
         }
+        token = token.split(" ")[1]; // remove "Bearer"
 
         try {
             const decodedPayload = JwtService.extractToken(token);
@@ -28,8 +31,6 @@ function verifyTokenWithHS256(requiredRoles) {
             }
 
             req.user = decodedPayload;
-            console.log("verify token is ok");
-            //return res.status(200).send({ message: 'OK.' });
             next();
         } catch (error) {
             console.log(error);
@@ -63,8 +64,6 @@ function verifyTokenWithRS256(requiredRoles) {
             }
 
             req.user = decodedPayload;
-            console.log("verify token is ok");
-            //return res.status(200).send({ message: 'OK.' });
             next();
         } catch (error) {
             console.log(error);

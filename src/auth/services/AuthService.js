@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 
 const UserModel = require('../models/UserModel');
 const UserRepository = require('../repositories/UserRepository');
-const Role = require('../utils/Role');
+const Role = require('../../utils/Role');
 const JwtService = require('../../jwt/services/JwtService');
 
 class AuthService {
