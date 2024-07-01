@@ -7,153 +7,132 @@ const helmet = require('helmet');
 const compression = require('compression');
 require('dotenv').config();
 const { createProxyMiddleware } = require('http-proxy-middleware');
+const cors = require('cors');
+const config = require("config");
 
 const authenticationRouter = require('./auth/routes/AuthRoutes');
 const { verifyTokenWithHS256, verifyTokenWithRS256 } = require('./auth/middlewares/VerifyToken');
 const Role = require('./auth/utils/Role');
 
-var app = express();
+class App {
+  constructor() {
+    this.app = express();
+    this.connectDB();
+    this.setMiddlewares();
+    this.setRoutes();
+    this.setGateway();
+    this.setErrorHandler();
+    //this.app.use(express.json()); // conflict with createProxyMiddleware
+  }
 
-// init middlewares
-//app.use(logger('dev'));
-app.use(logger('combined')); // Log HTTP requests
-app.use(helmet()); // Add security headers
-app.use(compression());
+  connectDB() {
+    require('./config/database/MongoDB');
+  }
 
-// app.use(express.json()); // conflict with createProxyMiddleware
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
-const cors = require('cors');
+  setMiddlewares() {
+    //app.use(logger('dev'));
+    this.app.use(helmet()); // Add security headers
+    this.app.use(compression());
+    this.app.use(logger('combined')); // Log HTTP requests
 
-// app.use(cors({
-//   origin: '*',
-//   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-//   credentials: true,
-// }));
-app.use(cors()); // Enable CORS
-app.disable("x-powered-by"); // Hide Express server information
+    // this.app.use(express.json()); // conflict with createProxyMiddleware
+    this.app.use(express.urlencoded({ extended: false }));
+    this.app.use(cookieParser());
+    this.app.use(express.static(path.join(__dirname, 'public')));
 
-// init db
-require('./config/database/MongoDB');
+    this.app.use(cors({
+      origin: '*',
+      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+      credentials: true,
+    }));
+    this.app.disable("x-powered-by"); // Hide Express server information
 
-// init routes
-app.use('/v1/api/auth', authenticationRouter);
-// app.use('/api/shop', verifyTokenWithHS256([Role.SHOP]), createProxyMiddleware({
-//   target: 'http://api.restful-api.dev',
-//   changeOrigin: true,
-//   pathRewrite: { '^/api/shop': '/objects' }
-// }));
-
-// =================================================================
-// Define rate limit constants
-const rateLimit = 20; // Max requests per minute
-const interval = 60 * 1000; // Time window in milliseconds (1 minute)
-
-// Object to store request counts for each IP address
-const requestCounts = {};
-
-// Reset request count for each IP address every 'interval' milliseconds
-setInterval(() => {
-  Object.keys(requestCounts).forEach((ip) => {
-    requestCounts[ip] = 0; // Reset request count for each IP address
-  });
-}, interval);
-
-// Middleware function for rate limiting and timeout handling
-function rateLimitAndTimeout(req, res, next) {
-  const ip = req.ip; // Get client IP address
-
-  // Update request count for the current IP
-  requestCounts[ip] = (requestCounts[ip] || 0) + 1;
-
-  // Check if request count exceeds the rate limit
-  if (requestCounts[ip] > rateLimit) {
-    // Respond with a 429 Too Many Requests status code
-    return res.status(429).json({
-      code: 429,
-      status: "Error",
-      message: "Rate limit exceeded.",
-      data: null,
+    // Apply express.json() middleware conditionally
+    this.app.use((req, res, next) => {
+      // Check if the request URL starts with /v1/api/auth or any other non-proxy routes
+      if (!req.url.startsWith('/api') && !req.url.startsWith('/objects')) {
+        express.json()(req, res, next);
+      } else {
+        next();
+      }
     });
   }
 
-  // Set timeout for each request (example: 10 seconds)
-  req.setTimeout(15000, () => {
-    // Handle timeout error
-    res.status(504).json({
-      code: 504,
-      status: "Error",
-      message: "Gateway timeout.",
-      data: null,
-    });
-    req.abort(); // Abort the request
-  });
+  setRoutes() {
+    this.app.use('/v1/api/auth', authenticationRouter);
+  }
 
-  next(); // Continue to the next middleware
+  setGateway() {
+    // Define the proxy services
+    const services = [
+      {
+        route: "/objects",
+        target: "https://api.restful-api.dev",
+        requiredRoles: [Role.SHOP, Role.USER]
+      },
+      {
+        route: "/api",
+        target: "http://dog.ceo",
+        requiredRoles: [Role.SHOP]
+      }
+    ];
+
+    // Set up proxy middleware for each microservice
+    services.forEach(({ route, target, requiredRoles }) => {
+      // Proxy options
+      const proxyOptions = {
+        target,
+        changeOrigin: true,
+        pathRewrite: (path, req) => {
+          return route;
+        }
+      };
+
+      // Apply proxy middleware for each route
+      this.app.use(route, verifyTokenWithHS256(requiredRoles), createProxyMiddleware(proxyOptions));
+    });
+
+    // Handler for route-not-found
+    this.app.use((_req, res) => {
+      res.status(404).json({
+        code: 404,
+        status: "Error",
+        message: "Route not found.",
+        data: null,
+      });
+    });
+  }
+
+  setErrorHandler() {
+    // catch 404 and forward to error handler
+    this.app.use(function (req, res, next) {
+      next(createError(404));
+    });
+
+    // error handler
+    this.app.use(function (err, req, res, next) {
+      // set locals, only providing error in development
+      res.locals.message = err.message;
+      res.locals.error = req.app.get('env') === 'development' ? err : {};
+
+      // render the error page
+      res.status(err.status || 500);
+      res.render('error');
+    });
+  }
+
+  start() {
+    const PORT = config.get("production.server.port");
+    const server = this.app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+    process.on("SIGINT", () => {
+      server.close(() => {
+        console.log("Server closed");
+        process.exit(0);
+      });
+    });
+  }
 }
 
-// Apply the rate limit and timeout middleware to the proxy
-//app.use(rateLimitAndTimeout);
-const services = [
-  {
-    route: "/objects1",
-    target: "http://get.geojs.io/v1/ip/country.json?ip=8.8.8.8",
-  },
-  {
-    route: "/objects",
-    target: "http://api.restful-api.dev/objects"
-  },
-  // Add more services as needed
-];
-services.forEach(({ route, target }) => {
-  // Proxy options
-  const proxyOptions = {
-    target,
-    changeOrigin: true,
-    pathRewrite: {
-      [`^${route}`]: ""
-    },
-    pathRewrite: (path, req) => {
-      // Remove trailing slash
-      return path.replace(/\/$/, '');
-    }
-  };
-
-  // Apply rate limiting and timeout middleware before proxying
-  app.use(route, createProxyMiddleware(proxyOptions));
-});
-
-
-// app.use('/api/private', verifyTokenWithHS256([Role.SHOP, Role.USER]), createProxyMiddleware({
-//   target: 'https://api.restful-api.dev/objects',
-//   changeOrigin: true,
-//   //pathRewrite: { '^/api/private': '/objects' },
-//   // onProxyReq(proxyReq, req, res) {
-//   //   console.log('Proxying request to: ', proxyReq.href);
-//   // },
-//   // onError(err, req, res) {
-//   //   console.error('Proxy error: ', err);
-//   //   res.status(500).send('Proxy error');
-//   // }
-// }));
-
-// error handler
-
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  next(createError(404));
-});
-
-// error handler
-app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
-});
-
-module.exports = app;
+module.exports = App;

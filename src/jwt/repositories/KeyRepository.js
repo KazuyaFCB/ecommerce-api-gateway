@@ -18,7 +18,7 @@ class KeyRepository {
       publicKey = await redis.get('publicKeys', userId.toString());
     }
     if (!privateKey) {
-      const key = KeyModel.findOne({ userId }).lean();
+      const key = await KeyModel.findOne({ userId }).lean();
       await redis.save('privateKeys', key.userId.toString(), key.privateKey);
       if (isRS256) {
         await redis.save('publicKeys', key.userId.toString(), key.publicKey);

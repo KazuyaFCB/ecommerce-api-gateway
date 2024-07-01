@@ -3,8 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./src/server.js",
-    "debug": "node --inspect ./src/server.js"
+    "start": "node ./index.js",
+    "debug": "node --inspect ./index.js"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
