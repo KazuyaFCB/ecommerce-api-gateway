@@ -1,3 +1,4 @@
+require('reflect-metadata');
 const createError = require('http-errors');
 const express = require('express');
 const path = require('path');
@@ -6,27 +7,27 @@ const logger = require('morgan');
 const helmet = require('helmet');
 const compression = require('compression');
 require('dotenv').config();
-const { createProxyMiddleware } = require('http-proxy-middleware');
+//const { createProxyMiddleware } = require('http-proxy-middleware');
 const cors = require('cors');
 const config = require("config");
 
 const authenticationRouter = require('./auth/routes/AuthRoutes');
-const { verifyTokenWithHS256, verifyTokenWithRS256 } = require('./auth/middlewares/VerifyToken');
-const Role = require('./utils/Role');
+//const { verifyTokenWithHS256, verifyTokenWithRS256 } = require('./auth/middlewares/VerifyToken');
+//const Role = require('./utils/Role');
 
 class App {
   constructor() {
     this.app = express();
-    this.connectDB();
+    //this.connectDB();
     this.setMiddlewares();
     this.setRoutes();
-    this.setGateway();
+    //this.setGateway();
     this.setErrorHandler();
   }
 
-  connectDB() {
-    require('./config/database/MongoDB');
-  }
+  // connectDB() {
+  //   require('./config/database/MongoDB');
+  // }
 
   setMiddlewares() {
     //app.use(logger('dev'));
@@ -46,60 +47,64 @@ class App {
     this.app.disable("x-powered-by"); // Hide Express server information
 
     // Apply express.json() middleware conditionally
-    this.app.use((req, res, next) => {
-      // Check if the request URL starts with /v1/api/auth or any other non-proxy routes
-      if (req.url.startsWith('/v1/api/auth')) {
-        express.json()(req, res, next);
-      } else {
-        next();
-      }
-    });
+    // this.app.use((req, res, next) => {
+    //   // Check if the request URL starts with /v1/api/auth or any other non-proxy routes
+    //   if (req.url.startsWith('/v1/api/auth')) {
+    //     express.json()(req, res, next);
+    //   } else {
+    //     next();
+    //   }
+    // });
+    this.app.use(express.json());
   }
 
   setRoutes() {
     this.app.use('/v1/api/auth', authenticationRouter);
   }
+  // setRoutes() {
+  //   this.app.use('/v1/api/auth', (req, res) => res.send("hello, world!"));
+  // }
 
-  setGateway() {
-    // Define the proxy services
-    const services = [
-      {
-        pathPrefix: "/objects",
-        target: "https://api.restful-api.dev",
-        requiredRoles: [Role.SHOP, Role.USER]
-      },
-      {
-        pathPrefix: "/api",
-        target: "http://dog.ceo",
-        requiredRoles: [Role.SHOP]
-      }
-    ];
+  // setGateway() {
+  //   // Define the proxy services
+  //   const services = [
+  //     {
+  //       pathPrefix: "/objects",
+  //       target: "https://api.restful-api.dev",
+  //       requiredRoles: [Role.SHOP, Role.USER]
+  //     },
+  //     {
+  //       pathPrefix: "/api",
+  //       target: "http://dog.ceo",
+  //       requiredRoles: [Role.SHOP]
+  //     }
+  //   ];
 
-    // Set up proxy middleware for each microservice
-    services.forEach(({ pathPrefix, target, requiredRoles }) => {
-      // Proxy options
-      const proxyOptions = {
-        target,
-        changeOrigin: true,
-        pathRewrite: (path, req) => {
-          return req.originalUrl;
-        }
-      };
+  //   // Set up proxy middleware for each microservice
+  //   services.forEach(({ pathPrefix, target, requiredRoles }) => {
+  //     // Proxy options
+  //     const proxyOptions = {
+  //       target,
+  //       changeOrigin: true,
+  //       pathRewrite: (path, req) => {
+  //         return req.originalUrl;
+  //       }
+  //     };
 
-      // Apply proxy middleware for each route
-      this.app.use(pathPrefix, verifyTokenWithHS256(requiredRoles), createProxyMiddleware(proxyOptions));
-    });
+  //     // Apply proxy middleware for each route
+  //     this.app.use(pathPrefix, verifyTokenWithHS256(requiredRoles), createProxyMiddleware(proxyOptions));
+  //   });
 
-    // Handler for route-not-found
-    this.app.use((_req, res) => {
-      res.status(404).json({
-        code: 404,
-        status: "Error",
-        message: "Route not found.",
-        data: null,
-      });
-    });
-  }
+  //   // Handler for route-not-found
+  //   this.app.use((_req, res) => {
+  //     res.status(404).json({
+  //       code: 404,
+  //       status: "Error",
+  //       message: "Route not found.",
+  //       data: null,
+  //     });
+  //   });
+  // }
 
   setErrorHandler() {
     // catch 404 and forward to error handler
