@@ -1,7 +1,0 @@
-{
-    "dev": {
-      "name": "ECommerce API Gateway - Dev Mode",
-      "httpHost": "http://localhost",
-      "httpPort": 8080
-    }
-  }
