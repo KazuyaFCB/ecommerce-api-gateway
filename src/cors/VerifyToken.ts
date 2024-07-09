@@ -3,6 +3,9 @@ import { Request, Response, NextFunction } from 'express';
 import container from '../config/ioc/InversifyConfig';
 import JwtUtility from '../util/JwtUtility';
 import AccessTokenService from '../auth/service/AccessTokenService';
+import { JwtException } from '../exception/JwtException';
+import { ErrorCode } from '../exception/ErrorCode';
+import { HttpStatus } from '../constant/HttpStatus';
 
 type Role = string;
 
@@ -15,19 +18,19 @@ function verifyAuthToken(requiredRoles: Role[]) {
         let token = req.headers['authorization'];
 
         if (!token) {
-            return res.status(401).send({ message: 'No token provided.' });
+            throw new JwtException(ErrorCode.JWT_NO_TOKEN_PROVIDED_ERR_MSG);
         }
         token = token.split(" ")[1]; // remove "Bearer"
 
         try {
             const decodedPayload = JwtUtility.extractToken(token);
             if (decodedPayload === null) {
-                return res.status(401).send({ message: 'Invalid token format.' });
+                throw new JwtException(ErrorCode.JWT_INVALID_TOKEN_FORMAT_ERR_MSG);
             }
 
             const accessToken = await accessTokenService.getAccessToken(decodedPayload.userId.toString());
             if (token !== accessToken) {
-                return res.status(401).send({ message: 'Access token is not exists in Redis.' });
+                throw new JwtException(ErrorCode.JWT_ACCESS_TOKEN_NOT_EXISTS_ERR_MSG);
             }
 
             JwtUtility.verifyAuthToken(token);
@@ -35,13 +38,14 @@ function verifyAuthToken(requiredRoles: Role[]) {
             // Check if any role in the token matches the required roles
             const hasRequiredRole = (decodedPayload.role as Role[]).some(role => requiredRoles.includes(role));
             if (!hasRequiredRole) {
-                return res.status(403).send({ message: 'Access denied.' });
+                throw new JwtException(ErrorCode.JWT_ACCESS_DENIED_ERR_MSG, HttpStatus.FORBIDDEN);
             }
 
             next();
         } catch (error) {
+            if (error instanceof JwtException) throw error;
             console.log(error);
-            return res.status(401).send({ message: 'Invalid token.' });
+            throw new JwtException(ErrorCode.JWT_INVALID_TOKEN_ERR_MSG);
         }
     };
 }

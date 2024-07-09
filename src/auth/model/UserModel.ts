@@ -3,7 +3,6 @@ import { Schema, model, Document } from 'mongoose';
 // Define the IUser interface extending Document with an optional _id property
 export interface IUser extends Document {
     _id: string;
-    name: string;
     email: string;
     password: string;
     status: 'verified' | 'not verified' | 'blocked';
@@ -12,10 +11,6 @@ export interface IUser extends Document {
 
 // Define the schema for the User model
 const userSchema = new Schema<IUser>({
-    name: {
-        type: String,
-        required: true,
-    },
     email: {
         type: String,
         required: true,

@@ -1,0 +1,17 @@
+export const ErrorCode = {
+    GENERIC_ERR_MSG: 'Internal Server Error',
+    GENERIC_ERR_CODE: 'GATEWAY_API_GENERIC_0001',
+    JWT_ERR_CODE: 'GATEWAY_API_JWT_0002',
+    JWT_NO_TOKEN_PROVIDED_ERR_MSG: 'No token provided',
+    JWT_INVALID_TOKEN_FORMAT_ERR_MSG: 'Invalid token format',
+    JWT_ACCESS_TOKEN_NOT_EXISTS_ERR_MSG: 'Access token is not exists in Redis',
+    JWT_ACCESS_DENIED_ERR_MSG: 'Access denied',
+    JWT_INVALID_TOKEN_ERR_MSG: 'Invalid token',
+
+    USER_ALREADY_EXISTS_ERR_MSG: 'User already exists',
+    USER_ALREADY_EXISTS_ERR_CODE: 'GATEWAY_API_REGISTER_1001',
+    USER_NOT_FOUND_ERR_MSG: 'User not found',
+    USER_NOT_FOUND_ERR_CODE: 'GATEWAY_API_LOGIN_1002',
+    INVALID_CREDENTIALS_ERR_MSG: 'Invalid credentials',
+    INVALID_CREDENTIALS_ERR_CODE: 'GATEWAY_API_LOGIN_1003',
+};

@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 
 import express, { Request, Response, NextFunction } from 'express';
+import 'express-async-errors';
 import createError from 'http-errors';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import path from 'path';
@@ -15,7 +16,8 @@ dotenv.config();
 
 import commonRouter from './config/route/CommonRoute';
 import verifyAuthToken from './cors/VerifyToken';
-import Constant from './util/Constant';
+import Constant from './constant/Constant';
+import { errorHandler } from './exception/ErrorHandler';
 
 class App {
   public app: express.Application;
@@ -82,26 +84,13 @@ class App {
         code: 404,
         status: "Error",
         message: "Route not found.",
-        data: null,
+        data: null
       });
     });
   }
 
   private setErrorHandler() {
-    // catch 404 and forward to error handler
-    this.app.use((req: Request, res: Response, next: NextFunction) => {
-      res.status(404).send('Not Found');
-      //next(createError(404));
-    });
-
-    // error handler
-    this.app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-      res.locals.message = err.message;
-      res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-      res.status(err.status || 500);
-      res.render('error');
-    });
+    this.app.use(errorHandler);
   }
 
   public start() {
