@@ -10,6 +10,8 @@ import RefreshTokenService from './RefreshTokenService';
 import { ApiException } from '../../exception/ApiException';
 import { ErrorCode } from '../../exception/ErrorCode';
 import { HttpStatus } from '../../constant/HttpStatus';
+import RegisterDTO from '../dto/RegisterDTO';
+import LoginDTO from '../dto/LoginDTO';
 
 @injectable()
 class AuthService {
@@ -19,49 +21,49 @@ class AuthService {
 
     @inject(RefreshTokenService) private refreshTokenService!: RefreshTokenService;
 
-    async register({ email, password }: { email: string; password: string }) {
+    async register(registerRequest : RegisterDTO.RegisterRequest) {
         // Kiểm tra xem user đã tồn tại chưa
-        const existingUser = await this.userRepository.findOneByEmail(email);
+        const existingUser = await this.userRepository.findOneByEmail(registerRequest.email);
         if (existingUser) {
             throw new ApiException(
                 ErrorCode.USER_ALREADY_EXISTS_ERR_MSG,
                 ErrorCode.USER_ALREADY_EXISTS_ERR_CODE,
-                `Email: ${email}`,
+                `Email: ${registerRequest.email}`,
                 HttpStatus.CONFLICT
             );
         }
 
         // Mã hóa mật khẩu
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await bcrypt.hash(registerRequest.password, 10);
 
         // Tạo user mới
         const newUser = new UserModel({
-            email,
+            email: registerRequest.email,
             password: hashedPassword,
             roles: [Role.USER]
         });
         await this.userRepository.save(newUser);
 
-        return { code: 201, message: 'User registered successfully', status: 'success' };
+        return new RegisterDTO.RegisterResponse('User registered successfully', newUser);
     }
 
-    async login({ email, password }: { email: string; password: string }) {
-        const user = await this.userRepository.findOneByEmail(email);
+    async login(loginRequest: LoginDTO.LoginRequest) {
+        const user = await this.userRepository.findOneByEmail(loginRequest.email);
         if (!user) {
             throw new ApiException(
                 ErrorCode.USER_NOT_FOUND_ERR_MSG,
                 ErrorCode.USER_NOT_FOUND_ERR_CODE,
-                `Email: ${email}`,
+                `Email: ${loginRequest.email}`,
                 HttpStatus.NOT_FOUND
             );
         }
 
-        const isPasswordValid = await bcrypt.compare(password, user.password);
+        const isPasswordValid = await bcrypt.compare(loginRequest.password, user.password);
         if (!isPasswordValid) {
             throw new ApiException(
                 ErrorCode.INVALID_CREDENTIALS_ERR_MSG,
                 ErrorCode.INVALID_CREDENTIALS_ERR_CODE,
-                `Email: ${email}`,
+                `Email: ${loginRequest.email}`,
                 HttpStatus.UNAUTHORIZED
             );
         }
@@ -72,7 +74,7 @@ class AuthService {
 
         await this.refreshTokenService.saveRefreshToken(user._id.toString(), refreshToken);
 
-        return { code: 200, message: 'Login successful', status: 'success', data: { accessToken, refreshToken } };
+        return new RegisterDTO.RegisterResponse('Login successful', { accessToken, refreshToken });
     }
 }
 

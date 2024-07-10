@@ -2,6 +2,9 @@ import { Request, Response, NextFunction } from 'express';
 import { inject, injectable } from 'inversify';
 
 import AuthService from '../service/AuthService';
+import RegisterDTO from '../dto/RegisterDTO';
+import LoginDTO from '../dto/LoginDTO';
+import ResponseHandler from '../../util/ResponseHandler';
 
 @injectable()
 class AuthController {
@@ -9,15 +12,15 @@ class AuthController {
     // constructor(@inject(AuthService) private authService: AuthService) { }
 
     async register(req: Request, res: Response, next: NextFunction) {
-        const { email, password } = req.body;
-        const result = await this.authService.register({ email, password });
-        return res.status(201).json(result);
+        const registerRequest: RegisterDTO.RegisterRequest = req.body;
+        const result = await this.authService.register(registerRequest);
+        return ResponseHandler.sendResponse(res, 201, result);
     }
 
     async login(req: Request, res: Response, next: NextFunction) {
-        const { email, password } = req.body;
-        const result = await this.authService.login({ email, password });
-        return res.status(200).json(result);
+        const loginRequest: LoginDTO.LoginRequest = req.body;
+        const result = await this.authService.login(loginRequest);
+        return ResponseHandler.sendResponse(res, 200, result);
     }
 }
 
