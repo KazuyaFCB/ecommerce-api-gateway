@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
-import { ApiException } from './ApiException';
-import { JwtException } from './JwtException';
-import { ServerException } from './ServerException';
-import { HttpStatus } from '../constant/HttpStatus';
+import { ApiException } from '../exception/ApiException';
+import { JwtException } from '../exception/JwtException';
+import { ServerException } from '../exception/ServerException';
+import { StatusCodes } from 'http-status-codes';
 
 export function errorHandler(err: Error, req: Request, res: Response, next: NextFunction) {
     if (err instanceof ApiException || err instanceof JwtException) {
@@ -19,6 +19,6 @@ export function errorHandler(err: Error, req: Request, res: Response, next: Next
         code: serverError.code,
         message: serverError.message,
         shortDesc: serverError.shortDesc,
-        status: HttpStatus.INTERNAL_SERVER_ERROR
+        status: StatusCodes.INTERNAL_SERVER_ERROR
     });
 }

@@ -1,5 +1,6 @@
 import { inject, injectable } from 'inversify';
 import bcrypt from 'bcrypt';
+import { StatusCodes } from 'http-status-codes';
 
 import UserRepository from '../repository/UserRepository';
 import UserModel from '../model/UserModel';
@@ -9,7 +10,6 @@ import AccessTokenService from './AccessTokenService';
 import RefreshTokenService from './RefreshTokenService';
 import { ApiException } from '../../exception/ApiException';
 import { ErrorCode } from '../../exception/ErrorCode';
-import { HttpStatus } from '../../constant/HttpStatus';
 import RegisterDTO from '../dto/RegisterDTO';
 import LoginDTO from '../dto/LoginDTO';
 
@@ -29,7 +29,7 @@ class AuthService {
                 ErrorCode.USER_ALREADY_EXISTS_ERR_MSG,
                 ErrorCode.USER_ALREADY_EXISTS_ERR_CODE,
                 `Email: ${registerRequest.email}`,
-                HttpStatus.CONFLICT
+                StatusCodes.CONFLICT
             );
         }
 
@@ -44,7 +44,7 @@ class AuthService {
         });
         await this.userRepository.save(newUser);
 
-        return new RegisterDTO.RegisterResponse('User registered successfully', newUser);
+        return new RegisterDTO.RegisterResponse(newUser);
     }
 
     async login(loginRequest: LoginDTO.LoginRequest) {
@@ -54,7 +54,7 @@ class AuthService {
                 ErrorCode.USER_NOT_FOUND_ERR_MSG,
                 ErrorCode.USER_NOT_FOUND_ERR_CODE,
                 `Email: ${loginRequest.email}`,
-                HttpStatus.NOT_FOUND
+                StatusCodes.NOT_FOUND
             );
         }
 
@@ -64,7 +64,7 @@ class AuthService {
                 ErrorCode.INVALID_CREDENTIALS_ERR_MSG,
                 ErrorCode.INVALID_CREDENTIALS_ERR_CODE,
                 `Email: ${loginRequest.email}`,
-                HttpStatus.UNAUTHORIZED
+                StatusCodes.UNAUTHORIZED
             );
         }
 
@@ -74,7 +74,7 @@ class AuthService {
 
         await this.refreshTokenService.saveRefreshToken(user._id.toString(), refreshToken);
 
-        return new RegisterDTO.RegisterResponse('Login successful', { accessToken, refreshToken });
+        return new LoginDTO.LoginResponse(accessToken, refreshToken, user);
     }
 }
 

@@ -1,4 +1,5 @@
-import UserModel from "../model/UserModel";
+import { IUser } from "../model/UserModel";
+import { UserDTO } from "./UserDTO";
 
 namespace LoginDTO {
     export class LoginRequest {
@@ -12,12 +13,14 @@ namespace LoginDTO {
     }
 
     export class LoginResponse {
-        message: string;
-        metadata: any;
+        accessToken: string;
+        refreshToken: string;
+        userDetail: UserDTO;
 
-        constructor(message: string, metadata: any) {
-            this.message = message;
-            this.metadata = metadata;
+        constructor(accessToken: string, refreshToken: string, userDetail: IUser) {
+            this.accessToken = accessToken;
+            this.refreshToken = refreshToken;
+            this.userDetail = UserDTO.convertToDTO(userDetail);
         }
     }
 }

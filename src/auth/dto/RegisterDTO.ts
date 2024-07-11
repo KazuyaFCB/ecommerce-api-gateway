@@ -1,4 +1,5 @@
-import UserModel from "../model/UserModel";
+import { IUser } from "../model/UserModel";
+import { UserDTO } from "./UserDTO";
 
 namespace RegisterDTO {
     export class RegisterRequest {
@@ -12,12 +13,10 @@ namespace RegisterDTO {
     }
 
     export class RegisterResponse {
-        message: string;
-        metadata: any;
+        createdUser: UserDTO;
 
-        constructor(message: string, metadata: any) {
-            this.message = message;
-            this.metadata = metadata;
+        constructor(createdUser: IUser) {
+            this.createdUser = UserDTO.convertToDTO(createdUser);
         }
     }
 }

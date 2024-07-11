@@ -31,7 +31,7 @@ const userSchema = new Schema<IUser>({
     },
 }, {
     timestamps: true,
-    collection: 'Users',
+    collection: 'Users'
 });
 
 // Create and export the User model

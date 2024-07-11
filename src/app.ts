@@ -17,7 +17,7 @@ dotenv.config();
 import commonRouter from './config/route/CommonRoute';
 import verifyAuthToken from './cors/VerifyToken';
 import Constant from './constant/Constant';
-import { errorHandler } from './exception/ErrorHandler';
+import { errorHandler } from './handler/ErrorHandler';
 
 class App {
   public app: express.Application;

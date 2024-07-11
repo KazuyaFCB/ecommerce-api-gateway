@@ -1,6 +1,6 @@
 import { ApiException } from './ApiException';
 import { ErrorCode } from './ErrorCode';
-import { HttpStatus } from '../constant/HttpStatus';
+import { StatusCodes } from 'http-status-codes';
 
 export class JwtException extends ApiException {
     // Các khai báo hàm overload
@@ -9,7 +9,7 @@ export class JwtException extends ApiException {
     constructor(message: string, status: number);
 
     // Constructor thực tế sẽ xử lý tất cả các trường hợp
-    constructor(message: string = "", status: number = HttpStatus.UNAUTHORIZED) {
+    constructor(message: string = "", status: number = StatusCodes.UNAUTHORIZED) {
         super(message, ErrorCode.JWT_ERR_CODE, "", status);
     }
 }

@@ -5,7 +5,7 @@ import JwtUtility from '../util/JwtUtility';
 import AccessTokenService from '../auth/service/AccessTokenService';
 import { JwtException } from '../exception/JwtException';
 import { ErrorCode } from '../exception/ErrorCode';
-import { HttpStatus } from '../constant/HttpStatus';
+import { StatusCodes } from 'http-status-codes';
 
 type Role = string;
 
@@ -38,7 +38,7 @@ function verifyAuthToken(requiredRoles: Role[]) {
             // Check if any role in the token matches the required roles
             const hasRequiredRole = (decodedPayload.role as Role[]).some(role => requiredRoles.includes(role));
             if (!hasRequiredRole) {
-                throw new JwtException(ErrorCode.JWT_ACCESS_DENIED_ERR_MSG, HttpStatus.FORBIDDEN);
+                throw new JwtException(ErrorCode.JWT_ACCESS_DENIED_ERR_MSG, StatusCodes.FORBIDDEN);
             }
 
             next();
